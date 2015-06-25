@@ -42,7 +42,7 @@ class CPT_Maker {
 		
 		// Invalid/duplicate name, canceling post type registration
 		if ( empty( $this->names ) || post_type_exists( $this->names[ 'key' ] ) ) {
-			_doing_it_wrong( 'Custom post type key is invalid', 'cpt-helper' );
+			_doing_it_wrong( 'Custom post type key is invalid', 'cpt-helper', '1.0.0' );
 			return;
 		}
 				
@@ -55,14 +55,14 @@ class CPT_Maker {
 		}
 		$this->labels = array_merge( array (
 			'name'					=> _x( $this->names[ 'plural' ], 'post type general name', 'cpt-maker' ),
-			'singular_name'			=> _x( $this->names[ 'singluar' ], 'post type singular name', 'cpt-maker' ),
+			'singular_name'			=> _x( $this->names[ 'singular' ], 'post type singular name', 'cpt-maker' ),
 			'menu_name'				=> _x( $this->names[ 'plural' ], 'admin menu', 'cpt-maker' ),
 			'name_admin_bar'		=> _x( $this->names[ 'singular' ], 'add new on admin bar', 'cpt-maker' ),
-			'add_new'				=> _x( sprintf( 'Add New %s', strtolower( $this->names[ 'singluar' ] ) ), strtolower( $this->names[ 'singluar' ] ),'cpt-maker'  ),
-			'add_new_item'			=> __( sprintf( 'Add New %s', $this->names[ 'singluar' ] ), 'cpt-maker' ),
-			'new_item'				=> __( sprintf( 'New %s', $this->names[ 'singluar' ] ), 'cpt-maker' ),
-			'edit_item'				=> __( sprintf( 'Edit %s', $this->names[ 'singluar' ] ), 'cpt-maker' ),
-			'view_item'				=> __( sprintf( 'View %s', $this->names[ 'singluar' ] ), 'cpt-maker' ),
+			'add_new'				=> _x( sprintf( 'Add New %s', strtolower( $this->names[ 'singular' ] ) ), strtolower( $this->names[ 'singular' ] ),'cpt-maker'  ),
+			'add_new_item'			=> __( sprintf( 'Add New %s', $this->names[ 'singular' ] ), 'cpt-maker' ),
+			'new_item'				=> __( sprintf( 'New %s', $this->names[ 'singular' ] ), 'cpt-maker' ),
+			'edit_item'				=> __( sprintf( 'Edit %s', $this->names[ 'singular' ] ), 'cpt-maker' ),
+			'view_item'				=> __( sprintf( 'View %s', $this->names[ 'singular' ] ), 'cpt-maker' ),
 			'all_items'				=> __( sprintf( 'All %s', $this->names[ 'plural' ] ), 'cpt-maker' ),
 			'search_items'			=> __( sprintf( 'Search %s', $this->names[ 'plural' ] ), 'cpt-maker' ),
 			'parent_item_colon'		=> __( sprintf( 'Parent %s:', $this->names[ 'plural' ] ), 'cpt-maker' ),
@@ -97,11 +97,21 @@ class CPT_Maker {
 	 * Call after all post types and taxonomies are registered
 	 */
 	public function register() {
+		$pt = $this;
 		// Register the post type and taxonomy actions
-		add_action( 'init', function() {
-			register_post_type( $this->key, $this->arguments );
-			foreach( $this->taxonomies as $key => $taxonomy ) {
-				register_taxonomy( $key, $this->key, $taxonomy[ 'arguments' ] );
+		add_action( 'init', function() use ( $pt ){
+			register_post_type( $pt->key, $pt->arguments );
+			if ( !empty( $pt->taxonomies ) ) {
+				foreach( $pt->taxonomies as $key => $taxonomy ) {
+					register_taxonomy( $key, $pt->key, $taxonomy[ 'arguments' ] );
+				}
+			}
+		});
+		add_action( 'restrict_manage_posts', function() use ( $pt ){
+			if ( !empty( $pt->taxonomies ) ) {
+				foreach( $pt->taxonomies as $key => $taxonomy ) {
+					$pt->taxonomy_filter( $key, $pt->key );
+				}
 			}
 		});
 	}
@@ -135,17 +145,17 @@ class CPT_Maker {
 		}
 		$labels = array_merge( array (
 			'name'							=> _x( $name_array[ 'plural' ], 'taxonomy general name', 'cpt-maker' ),
-			'singular_name'					=> _x( $name_array[ 'singluar' ], 'taxonomy singular name','cpt-maker'  ),
+			'singular_name'					=> _x( $name_array[ 'singular' ], 'taxonomy singular name','cpt-maker'  ),
 			'search_items'					=> __( sprintf( 'Search %s', $name_array[ 'plural' ] ), 'cpt-maker' ),
 			'popular_items'					=> __( sprintf( 'Popular %s', $name_array[ 'plural' ] ), 'cpt-maker' ),
 			'menu_name'						=> __( $name_array[ 'plural' ], 'cpt-maker' ),
 			'all_items'						=> __( sprintf( 'All %s', $name_array[ 'plural' ] ), 'cpt-maker' ),
 			'parent_item'					=> __( sprintf( 'Parent %s', $name_array[ 'singular' ] ), 'cpt-maker' ),
 			'parent_item_colon'				=> __( sprintf( 'Parent %s:', $name_array[ 'singular' ] ), 'cpt-maker'  ),
-			'edit_item'						=> __( sprintf( 'Edit %s', $name_array[ 'singluar' ] ), 'cpt-maker' ),
-			'update_item'					=> __( sprintf( 'Update %s', $name_array[ 'singluar' ] ), 'cpt-maker' ),
-			'add_new_item'					=> __( sprintf( 'Add New %s', $name_array[ 'singluar' ] ), 'cpt-maker' ),
-			'new_item_name'					=> __( sprintf( 'New %s Name', $name_array[ 'singluar' ] ), 'cpt-maker' ),
+			'edit_item'						=> __( sprintf( 'Edit %s', $name_array[ 'singular' ] ), 'cpt-maker' ),
+			'update_item'					=> __( sprintf( 'Update %s', $name_array[ 'singular' ] ), 'cpt-maker' ),
+			'add_new_item'					=> __( sprintf( 'Add New %s', $name_array[ 'singular' ] ), 'cpt-maker' ),
+			'new_item_name'					=> __( sprintf( 'New %s Name', $name_array[ 'singular' ] ), 'cpt-maker' ),
 			'separate_items_with_commas'	=> __( sprintf( 'Separate %s with commas', $name_array[ 'plural' ] ), 'cpt-maker' ),
 			'add_or_remove_items'			=> __( sprintf( 'Add or remove %s', $name_array[ 'plural' ] ), 'cpt-maker' ),
 			'choose_from_most_used'			=> __( sprintf( 'Choose from most used %s', $name_array[ 'plural' ] ), 'cpt-maker' ),
@@ -172,6 +182,34 @@ class CPT_Maker {
 			'arguments'	=> $arguments,
 			'labels'	=> $labels
 		);
+	}
+	
+	/**
+	 * Show a taxonomy term filter at the top of the post listing page
+	 * 
+	 * @param string $key Taxonomy key/slug
+	 * @param string $type Post type key/slug
+	 */
+	public function taxonomy_filter( $key, $type ) {
+		global $typenow;
+		
+		if ( empty( $key ) || empty( $type ) ) {
+			return;
+		}
+		
+		// Show the filter only on the matching post types and show_admin_column is set for the taxonomy
+		if( $typenow === $type && true === $this->taxonomies[ $key ][ 'arguments' ][ 'show_admin_column' ] ){
+			$terms = get_terms( $key );
+			if( count( $terms ) > 0 ) {
+				printf( '<select name=%s id=%s class="postform">', esc_attr( $key ), esc_attr( $key ) );
+				printf( '<option value="">Show All %s</option>', esc_html( $this->taxonomies[ $key ][ 'name' ][ 'plural' ] ) );
+				foreach ( $terms as $term ) {
+					$selected = selected( esc_attr( get_query_var( $key ) ), $term->slug, false );
+					printf( '<option value=%s %s>%s (%s)</option>', esc_attr( $term->slug ), $selected, $term->name, $term->count );
+				}
+				printf( '</select>' );
+			}
+		}
 	}
 		
 	/**
