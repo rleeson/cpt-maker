@@ -13,3 +13,10 @@ Use
 v1.0.0
 -------
 - Very basic functionality, creates the base CPT and taxonomies
+
+v1.1.0
+------
+- Multiple misnamed array indexes fixed
+- Add missing version to _doing_it_wrong call
+- Update register() closure to support 5.3/5.4 and register all associated taxonomies
+- Add a taxonomy filter to associated post type listings
